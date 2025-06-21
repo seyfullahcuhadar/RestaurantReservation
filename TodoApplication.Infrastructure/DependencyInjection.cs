@@ -53,16 +53,29 @@ public static class DependencyInjection
     }
     private static void AddOpenTelemetry(IServiceCollection services)
     {
-        services.AddOpenTelemetry()
-            .ConfigureResource(resource => resource.AddService("TodoApp"))
-            .WithTracing(tracing => tracing
-                .AddAspNetCoreInstrumentation()
-                .AddJaegerExporter()
-                .AddConsoleExporter())
-            .WithMetrics(metrics => metrics
-                .AddAspNetCoreInstrumentation()
-                .AddConsoleExporter()
-                .AddPrometheusExporter());
+           services.AddOpenTelemetry()
+                .WithTracing(tracerProviderBuilder =>
+                    tracerProviderBuilder
+                        .AddSource("TodoApplication.API")
+                        .SetResourceBuilder(ResourceBuilder.CreateDefault()
+                            .AddService("TodoApplication.API"))
+                        .AddAspNetCoreInstrumentation()
+                        //.AddGrpcClientInstrumentation()
+                        .AddEntityFrameworkCoreInstrumentation(options =>
+                        {
+                            options.SetDbStatementForText = true;
+                            options.SetDbStatementForStoredProcedure = true;
+                        })
+                        .AddHttpClientInstrumentation()
+                        .AddConsoleExporter()
+                        .AddOtlpExporter(otlpOptions =>
+                        {
+                            otlpOptions.Endpoint = new Uri("http://localhost:4317");
+                        }))
+                .WithMetrics(metrics => metrics
+                    .AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation()
+                    .AddConsoleExporter());
     }
     private static void AddAuthentication(IServiceCollection services, IConfiguration configuration)
     {

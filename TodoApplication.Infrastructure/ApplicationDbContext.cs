@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using TodoApplication.Application.Abstractions.Clock;
 using TodoApplication.Application.Exceptions;
 using TodoApplication.Domain.Abstractions;
+using TodoApplication.Domain.Todo;
 using TodoApplication.Infrastructure.Authentication.Models;
 using TodoApplication.Infrastructure.Outbox;
 
@@ -27,7 +28,7 @@ public sealed class ApplicationDbContext:IdentityDbContext<ApplicationUser>,IUni
         _dateTimeProvider = dateTimeProvider;
     }
 
- 
+    public DbSet<Todo> Todos { get; set; }
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
         try
